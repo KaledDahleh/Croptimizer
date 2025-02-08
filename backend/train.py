@@ -4,18 +4,20 @@ import torch.optim as optim
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
-import os
 
+# Load dataset
 file_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/crop_data.xlsx"
 df = pd.read_excel(file_path)
 
 print("Dataset Loaded. First 5 rows:")
 print(df.head())
 
+# Encode labels
 label_encoder = LabelEncoder()
 df['label'] = label_encoder.fit_transform(df['label'])
 print("Label Encoding Completed. Unique classes:", label_encoder.classes_)
 
+# Feature selection and scaling
 X = df[['temperature', 'rainfall', 'wind_speed']].values
 y = df['label'].values
 
@@ -23,41 +25,45 @@ scaler = StandardScaler()
 X = scaler.fit_transform(X)
 print("Feature Scaling Applied.")
 
-X_train, y_train = X, y
+# Convert to tensors
+X_train_tensor = torch.tensor(X, dtype=torch.float32)
+y_train_tensor = torch.tensor(y, dtype=torch.long)
 
-print(f"Data prepared. Training samples: {len(X_train)}.")
-
-X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
-y_train_tensor = torch.tensor(y_train, dtype=torch.long)
-
-batch_size = 16
+# DataLoader setup
+batch_size = 32  # Increased batch size for efficiency
 train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 print("DataLoader Created.")
 
+# Define a deeper model for improved learning
 class CropClassifier(nn.Module):
     def __init__(self, input_size, num_classes):
         super(CropClassifier, self).__init__()
-        self.fc1 = nn.Linear(input_size, 16)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(16, num_classes)
+        self.fc1 = nn.Linear(input_size, 32)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(32, 16)
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(16, num_classes)
     
     def forward(self, x):
         x = self.fc1(x)
-        x = self.relu(x)
+        x = self.relu1(x)
         x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.fc3(x)
         return x
 
 num_classes = len(label_encoder.classes_)
-
 model = CropClassifier(input_size=3, num_classes=num_classes)
+
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+optimizer = optim.Adam(model.parameters(), lr=0.001)  # Reduced learning rate for better stability
 
 print("Model Initialized.")
 
-num_epochs = 20
+# Training loop
+num_epochs = 30  # Increased epochs for better convergence
 for epoch in range(num_epochs):
     model.train()
     total_loss = 0
@@ -79,6 +85,7 @@ for epoch in range(num_epochs):
 
 print("Training Completed!")
 
+# Save model
 save_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/saved_models/model.pth"
 torch.save(model.state_dict(), save_path)
 
