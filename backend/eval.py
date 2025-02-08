@@ -4,7 +4,6 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import pandas as pd
 
-# Load the dataset to get label encoder classes and scaler
 file_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/crop_data.xlsx"
 df = pd.read_excel(file_path)
 
@@ -13,9 +12,8 @@ df['label'] = label_encoder.fit_transform(df['label'])
 
 scaler = StandardScaler()
 X = df[['temperature', 'rainfall', 'wind_speed']].values
-scaler.fit(X)  # Fit scaler on dataset
+scaler.fit(X)
 
-# Define the model class
 class CropClassifier(nn.Module):
     def __init__(self, input_size, num_classes):
         super(CropClassifier, self).__init__()
@@ -33,23 +31,19 @@ class CropClassifier(nn.Module):
         x = self.fc3(x)
         return x
 
-# Load model
 num_classes = len(label_encoder.classes_)
 model = CropClassifier(input_size=3, num_classes=num_classes)
 model.load_state_dict(torch.load("/Users/kaleddahleh/Desktop/Croptimizer/backend/saved_models/model.pth"))
 model.eval()
 
-# Get user input
 temperature = float(input("Enter Temperature: "))
 rainfall = float(input("Enter Rainfall: "))
 wind_speed = float(input("Enter Wind Speed: "))
 
-# Preprocess input
 data = np.array([[temperature, rainfall, wind_speed]])
 data = scaler.transform(data)
 data_tensor = torch.tensor(data, dtype=torch.float32)
 
-# Predict with model
 with torch.no_grad():
     output = model(data_tensor)
     top3_indices = torch.topk(output, 3, dim=1).indices[0].tolist()
