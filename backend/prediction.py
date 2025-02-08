@@ -86,7 +86,7 @@ def predict_yield(user_input):
     
     if "latitude" not in user_input or "longitude" not in user_input:
         raise ValueError("Missing required input: 'latitude' and 'longitude'.")
-    
+
     # Fetch weather data
     weather_data = getAvgs(user_input["latitude"], user_input["longitude"])
     
@@ -100,22 +100,21 @@ def predict_yield(user_input):
     crop_name = user_input["crop_type"].strip().lower()  
     if crop_name not in le.classes_:
         raise ValueError(f"Unknown crop type: '{crop_name}'. Please use one from the dataset: {list(le.classes_)}")
+    
+    # Fetch soil nutrient data and add to user_input (keys remain uppercase)
+    state_data = get_nutrient_levels(user_input["state"])
+    user_input["N"] = state_data['N']
+    user_input["P"] = state_data['P']
+    user_input["K"] = state_data['K']
 
-    # Convert input keys to lowercase
-    user_input_lower = {key.lower(): value for key, value in user_input.items()}
+    # Convert input keys to lowercase except for 'N', 'P', and 'K'
+    user_input_lower = {
+        key if key in ["N", "P", "K"] else key.lower(): value
+        for key, value in user_input.items()
+    }
 
-    # Ensure input matches trained model features
+    # Ensure all required features exist
     missing_features = [f for f in selected_features if f not in user_input_lower]
-
-    if "state" in user_input:  # Check if state is provided
-        state_nutrients = get_nutrient_levels(user_input["state"])
-        if state_nutrients:
-            user_input["N"] = state_nutrients["N"]
-            user_input["P"] = state_nutrients["P"]
-            user_input["K"] = state_nutrients["K"]
-
-    # Ensure input contains all required features
-    missing_features = [f for f in selected_features if f not in user_input]
     if missing_features:
         raise ValueError(f"Missing features: {missing_features}")
 
@@ -129,7 +128,7 @@ def predict_yield(user_input):
 # --- Step 5: Run Prediction Example ---
 user_input = {
     "crop_type": "cotton",
-    "state": "Kentucky",
+    "state": "Illinois",
     "latitude": 37.7749,
     "longitude": -122.4194,
 }
