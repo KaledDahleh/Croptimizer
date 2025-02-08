@@ -6,12 +6,12 @@ const Landing = () => {
 
         <div className="h-screen flex flex-col items-center justify-center bg-green-500">
 
-            <div className="w-1/2 bg-white opacity-90 p-8 drop-shadow-lg rounded-lg flex flex-col items-center justify-center">
+            <div className="w-3/4 md:w-1/2 bg-white opacity-90 p-8 drop-shadow-lg rounded-lg flex flex-col items-center justify-center mb-30">
 
 
                 <div className="flex flex-col items-center ">
-                    <h1 className="text-4xl font-bold">Welcome to Croptimizer 🌾</h1>
-                    <p className="mt-4 text-lg text-center">
+                    <h1 className="text-xl md:text-4xl font-bold">Welcome to Croptimizer 🌾</h1>
+                    <p className="mt-4 text-sm md:text-lg text-center">
                         Croptimizer is a web application that helps farmers optimize their crop yield.
                     </p>
 
