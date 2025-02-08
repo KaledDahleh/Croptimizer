@@ -52,7 +52,7 @@ data_tensor = torch.tensor(data, dtype=torch.float32)
 # Predict with model
 with torch.no_grad():
     output = model(data_tensor)
-predicted_label = torch.argmax(output, dim=1).item()
-predicted_crop = label_encoder.inverse_transform([predicted_label])[0]
+    top3_indices = torch.topk(output, 3, dim=1).indices[0].tolist()
+    top3_crops = label_encoder.inverse_transform(top3_indices)
 
-print(f"Optimal Crop for given conditions: {predicted_crop}")
+print(f"Top 3 Optimal Crops for given conditions: {top3_crops}")
