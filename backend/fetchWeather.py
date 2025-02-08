@@ -16,11 +16,14 @@ def getAvgs(lat, lon):
 
     avg_temp_max = sum(temps_max) / len(temps_max)
     avg_temp_min = sum(temps_min) / len(temps_min)
+    avg_temp = (sum(temps_max) + sum(temps_min)) / (2 * len(temps_max))
     avg_precip = sum(precip) / len(precip)
     avg_wind_speed = sum(wind_speed) / len(wind_speed)
     avg_sunshine = sum(sunshine) / len(sunshine) / 60 / 60
 
-    return dict(avg_temp_max=avg_temp_max, avg_temp_min=avg_temp_min, avg_precip=avg_precip, avg_wind_speed=avg_wind_speed, avg_sunshine=avg_sunshine)
+    avg_humidity = min(100, max(30, (avg_precip * 1.2 + 60 - avg_temp * 0.5)))
+
+    return dict(avg_temp_max=avg_temp_max, avg_temp_min=avg_temp_min, avg_temp=avg_temp, avg_precip=avg_precip, avg_wind_speed=avg_wind_speed, avg_sunshine=avg_sunshine, avg_humidity=avg_humidity)
 
 if __name__ == "__main__":
     print(getAvgs(67.7749, 22.4194))

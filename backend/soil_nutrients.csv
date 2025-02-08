@@ -1,0 +1,74 @@
+State,Soil Nitrogen (ppm),Phosphorus (ppm)_y,Potassium (ppm)_y
+Kentucky,1500.0,63,54.0
+Tennessee,1500.0,68,73.0
+West Virginia,1500.0,52,60.0
+Virginia,1500.0,34,75.0
+Virginia,1240.0,34,75.0
+Pennsylvania,1500.0,26,52.0
+Pennsylvania,1240.0,26,52.0
+Alabama,1500.0,36,75.0
+Alabama,930.0,36,75.0
+Florida,1570.0,20,91.0
+Florida,930.0,20,91.0
+Georgia,1570.0,17,94.0
+Georgia,930.0,17,94.0
+South Carolina,1570.0,12,90.0
+South Carolina,930.0,12,90.0
+North Carolina,1570.0,8,54.0
+North Carolina,930.0,8,54.0
+Kansas,940.0,55,16.0
+Kansas,890.0,55,16.0
+Nebraska,940.0,49,7.0
+Nebraska,1360.0,49,7.0
+Oklahoma,940.0,68,37.0
+Oklahoma,990.0,68,37.0
+Oklahoma,890.0,68,37.0
+Arizona,709.9999999999999,55,15.0
+Arizona,1210.0,55,15.0
+New Mexico,709.9999999999999,54,6.0
+New Mexico,1210.0,54,6.0
+Nevada,709.9999999999999,45,15.0
+Nevada,1200.0,45,15.0
+Nevada,1320.0,45,15.0
+California,709.9999999999999,32,27.0
+California,1320.0,32,27.0
+Utah,1200.0,39,26.0
+Utah,1210.0,39,26.0
+Idaho,1200.0,31,16.0
+Idaho,1870.0,31,16.0
+Idaho,2510.0,31,16.0
+Oregon,1200.0,15,34.0
+Oregon,2510.0,15,34.0
+Michigan,2080.0,28,47.0
+Wisconsin,2080.0,37,52.0
+Illinois,2080.0,44,28.0
+Illinois,1350.0,44,28.0
+Indiana,2080.0,45,43.0
+Indiana,1350.0,45,43.0
+Ohio,2080.0,53,41.0
+Minnesota,2080.0,48,19.0
+Maryland,1240.0,32,65.0
+Delaware,1240.0,16,70.0
+New Jersey,1240.0,19,63.0
+New York,2350.0,31,62.0
+Vermont,2350.0,66,70.0
+New Hampshire,2350.0,17,81.0
+Maine,2350.0,12,45.0
+Massachusetts,2350.0,13,76.0
+Connecticut,2350.0,29,70.0
+Rhode Island,2350.0,10,
+North Dakota,1360.0,77,6.0
+South Dakota,1360.0,62,8.0
+Montana,1360.0,63,3.0
+Montana,1870.0,63,3.0
+Wyoming,1360.0,45,13.0
+Wyoming,1870.0,45,13.0
+Missouri,990.0,56,43.0
+Missouri,1350.0,56,43.0
+Arkansas,990.0,60,54.0
+Washington,2510.0,19,15.0
+Iowa,1350.0,40,15.0
+Mississippi,930.0,62,48.0
+Texas,890.0,68,24.0
+Colorado,1210.0,50,10.0
+Louisiana,,78,57.0
