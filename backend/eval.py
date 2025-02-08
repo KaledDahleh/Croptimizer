@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import pandas as pd
 
-file_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/crop_data.xlsx"
+file_path = "./crop_data.xlsx"
 df = pd.read_excel(file_path)
 
 label_encoder = LabelEncoder()
@@ -33,7 +33,7 @@ class CropClassifier(nn.Module):
 
 num_classes = len(label_encoder.classes_)
 model = CropClassifier(input_size=3, num_classes=num_classes)
-model.load_state_dict(torch.load("/Users/kaleddahleh/Desktop/Croptimizer/backend/saved_models/model.pth"))
+model.load_state_dict(torch.load("./saved_models/model.pth"))
 model.eval()
 
 temperature = float(input("Enter Temperature: "))
