@@ -7,3 +7,4 @@ shap
 joblib
 flask 
 flask-cors
+--no-cache-dir shap
