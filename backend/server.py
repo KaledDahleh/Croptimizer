@@ -65,11 +65,12 @@ def get_top3_crops(temperature, rainfall, wind_speed):
 def home():
     return jsonify({"message": "Crop Prediction API is Running!"})
 
-@app.route("/predict", methods=["POST"])
-def predict():
+@app.route("/predict_crops", methods=["POST"])
+def predict_crops():
     try:
         data = request.json
         required_fields = ["temperature", "rainfall", "wind_speed"]
+
         if not all(field in data for field in required_fields):
             return jsonify({
                 "error": "Missing one or more required fields: temperature, rainfall, wind_speed"
@@ -81,6 +82,26 @@ def predict():
 
         top3_crops = get_top3_crops(temperature, rainfall, wind_speed)
         return jsonify({"top3_crops": list(top3_crops)})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route("/predict_yield", methods=["POST"])
+def predict_yield_route():
+    try:
+        data = request.json
+        required_fields = ["crop_type", "state", "latitude", "longitude"]
+
+        if not all(field in data for field in required_fields):
+            return jsonify({
+                "error": "Missing one or more required fields: crop_type, state, latitude, longitude"
+            }), 400
+
+        # Call predict_yield function from prediction.py
+        predicted_yield = predict_yield(data)
+
+        return jsonify({"predicted_yield": predicted_yield})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
