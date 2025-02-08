@@ -9,21 +9,20 @@ import pandas as pd
 app = Flask(__name__)
 CORS(app)
 
-# Load crop data to set up the scaler and label encoder
-# This file should contain the columns: temperature, rainfall, wind_speed, and label.
+
 file_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/crop_data.xlsx"
 df = pd.read_excel(file_path)
 
-# Prepare the label encoder using the crop labels
+
 label_encoder = LabelEncoder()
 df['label'] = label_encoder.fit_transform(df['label'])
 
-# Fit a scaler on the features that the model expects
+
 scaler = StandardScaler()
 X = df[['temperature', 'rainfall', 'wind_speed']].values
 scaler.fit(X)
 
-# Define the PyTorch model architecture
+
 class CropClassifier(nn.Module):
     def __init__(self, input_size, num_classes):
         super(CropClassifier, self).__init__()
@@ -41,7 +40,6 @@ class CropClassifier(nn.Module):
         x = self.fc3(x)
         return x
 
-# Initialize the model and load the saved state
 num_classes = len(label_encoder.classes_)
 model = CropClassifier(input_size=3, num_classes=num_classes)
 model.load_state_dict(torch.load("/Users/kaleddahleh/Desktop/Croptimizer/backend/saved_models/model.pth"))
@@ -52,16 +50,14 @@ def get_top3_crops(temperature, rainfall, wind_speed):
     Process the input values, run them through the model,
     and return the top 3 predicted crops.
     """
-    # Format and scale the input data
+
     data = np.array([[temperature, rainfall, wind_speed]])
     data = scaler.transform(data)
     data_tensor = torch.tensor(data, dtype=torch.float32)
     
     with torch.no_grad():
         output = model(data_tensor)
-        # Get indices of the top 3 predictions
         top3_indices = torch.topk(output, 3, dim=1).indices[0].tolist()
-        # Convert indices back to crop names
         top3_crops = label_encoder.inverse_transform(top3_indices)
     return top3_crops
 
