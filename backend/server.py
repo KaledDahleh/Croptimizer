@@ -1,81 +1,90 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import joblib
+import torch
+import torch.nn as nn
 import numpy as np
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 import pandas as pd
 
 app = Flask(__name__)
-CORS(app)  # Allow React to communicate with Flask
+CORS(app)
 
-# Load trained model, feature list, and label encoder
-model = joblib.load("crop_yield_model.pkl")
-selected_features = joblib.load("selected_features.pkl")
-label_encoder = joblib.load("crop_label_encoder.pkl")
+# Load crop data to set up the scaler and label encoder
+# This file should contain the columns: temperature, rainfall, wind_speed, and label.
+file_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/crop_data.xlsx"
+df = pd.read_excel(file_path)
 
-# Load USDA soil data (State-wise N, P, K values)
-soil_data = pd.read_csv("USDA_Soil_Data.csv")
-soil_data["State"] = soil_data["State"].str.lower()  # Normalize state names
+# Prepare the label encoder using the crop labels
+label_encoder = LabelEncoder()
+df['label'] = label_encoder.fit_transform(df['label'])
+
+# Fit a scaler on the features that the model expects
+scaler = StandardScaler()
+X = df[['temperature', 'rainfall', 'wind_speed']].values
+scaler.fit(X)
+
+# Define the PyTorch model architecture
+class CropClassifier(nn.Module):
+    def __init__(self, input_size, num_classes):
+        super(CropClassifier, self).__init__()
+        self.fc1 = nn.Linear(input_size, 32)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(32, 16)
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(16, num_classes)
+    
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu1(x)
+        x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.fc3(x)
+        return x
+
+# Initialize the model and load the saved state
+num_classes = len(label_encoder.classes_)
+model = CropClassifier(input_size=3, num_classes=num_classes)
+model.load_state_dict(torch.load("/Users/kaleddahleh/Desktop/Croptimizer/backend/saved_models/model.pth"))
+model.eval()
+
+def get_top3_crops(temperature, rainfall, wind_speed):
+    """
+    Process the input values, run them through the model,
+    and return the top 3 predicted crops.
+    """
+    # Format and scale the input data
+    data = np.array([[temperature, rainfall, wind_speed]])
+    data = scaler.transform(data)
+    data_tensor = torch.tensor(data, dtype=torch.float32)
+    
+    with torch.no_grad():
+        output = model(data_tensor)
+        # Get indices of the top 3 predictions
+        top3_indices = torch.topk(output, 3, dim=1).indices[0].tolist()
+        # Convert indices back to crop names
+        top3_crops = label_encoder.inverse_transform(top3_indices)
+    return top3_crops
 
 @app.route("/")
 def home():
-    return jsonify({"message": "Crop Yield Prediction API is Running!"})
+    return jsonify({"message": "Crop Prediction API is Running!"})
 
 @app.route("/predict", methods=["POST"])
-def predict_yield():
+def predict():
     try:
-        data = request.json  # Get JSON input from frontend
+        data = request.json
+        required_fields = ["temperature", "rainfall", "wind_speed"]
+        if not all(field in data for field in required_fields):
+            return jsonify({
+                "error": "Missing one or more required fields: temperature, rainfall, wind_speed"
+            }), 400
 
-        # Ensure required inputs are present
-        if "location" not in data or "crop_type" not in data or "soil_type" not in data:
-            return jsonify({"error": "Missing 'location', 'crop_type', or 'soil_type'"}), 400
+        temperature = float(data["temperature"])
+        rainfall = float(data["rainfall"])
+        wind_speed = float(data["wind_speed"])
 
-        # Get state-based soil data
-        state_name = data["location"].strip().lower()
-        state_soil = soil_data[soil_data["State"] == state_name]
-
-        if state_soil.empty:
-            return jsonify({"error": f"Unknown state: '{state_name}'. Please enter a valid U.S. state."}), 400
-
-        # Extract soil properties from USDA data
-        N_value = state_soil["N"].values[0]
-        P_value = state_soil["P"].values[0]
-        K_value = state_soil["K"].values[0]
-
-        # Convert crop type to lowercase and check if it exists
-        crop_name = data["crop_type"].strip().lower()
-        if crop_name not in label_encoder.classes_:
-            return jsonify({"error": f"Unknown crop type: '{crop_name}'. Please use one from the dataset: {list(label_encoder.classes_)}"}), 400
-
-        # Encode crop type
-        crop_encoded = label_encoder.transform([crop_name])[0]
-
-        # Set input data with soil nutrients from USDA
-        input_data = {
-            "label": crop_encoded,
-            "N": N_value,
-            "P": P_value,
-            "K": K_value,
-            "temperature": data.get("temperature", 25),  # Default to 25°C
-            "humidity": data.get("humidity", 60),  # Default to 60%
-            "rainfall": data.get("rainfall", 100),  # Default to 100mm
-            "sunlight_exposure": data.get("sunlight_exposure", 8),  # Default to 8 hrs/day
-            "ph": data.get("ph", 6.5),  # Default to neutral pH
-            "soil_moisture": data.get("soil_moisture", 30),  # Default to 30%
-        }
-
-        # Ensure all required features exist
-        missing_features = [f for f in selected_features if f not in input_data]
-        if missing_features:
-            return jsonify({"error": f"Missing features: {missing_features}"}), 400
-
-        # Convert input to array format for prediction
-        input_values = np.array([input_data[f] for f in selected_features]).reshape(1, -1)
-
-        # Predict yield
-        predicted_yield = model.predict(input_values)[0]
-
-        # Return only the numeric result
-        return jsonify({"predicted_yield": f"{predicted_yield:.2f}"})
+        top3_crops = get_top3_crops(temperature, rainfall, wind_speed)
+        return jsonify({"top3_crops": list(top3_crops)})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

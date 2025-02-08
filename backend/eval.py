@@ -36,17 +36,24 @@ model = CropClassifier(input_size=3, num_classes=num_classes)
 model.load_state_dict(torch.load("./saved_models/model.pth"))
 model.eval()
 
-temperature = float(input("Enter Temperature: "))
-rainfall = float(input("Enter Rainfall: "))
-wind_speed = float(input("Enter Wind Speed: "))
+def get_top3_crops(temperature, rainfall, wind_speed):
+    """
+    Returns the top 3 optimal crops based on the input conditions.
+    """
+    data = np.array([[temperature, rainfall, wind_speed]])
+    data = scaler.transform(data)
+    data_tensor = torch.tensor(data, dtype=torch.float32)
+    
+    with torch.no_grad():
+        output = model(data_tensor)
+        top3_indices = torch.topk(output, 3, dim=1).indices[0].tolist()
+        top3_crops = label_encoder.inverse_transform(top3_indices)
+    return top3_crops
 
-data = np.array([[temperature, rainfall, wind_speed]])
-data = scaler.transform(data)
-data_tensor = torch.tensor(data, dtype=torch.float32)
-
-with torch.no_grad():
-    output = model(data_tensor)
-    top3_indices = torch.topk(output, 3, dim=1).indices[0].tolist()
-    top3_crops = label_encoder.inverse_transform(top3_indices)
-
-print(f"Top 3 Optimal Crops for given conditions: {top3_crops}")
+if __name__ == "__main__":
+    temperature = float(input("Enter Temperature: "))
+    rainfall = float(input("Enter Rainfall: "))
+    wind_speed = float(input("Enter Wind Speed: "))
+    
+    top3_crops = get_top3_crops(temperature, rainfall, wind_speed)
+    print(f"Top 3 Optimal Crops for given conditions: {top3_crops}")
