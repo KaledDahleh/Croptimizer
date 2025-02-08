@@ -5,12 +5,20 @@ import torch.nn as nn
 import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import pandas as pd
+from prediction import predict_yield
+import dotenv
+import os
+import requests
+from fetchWeather import getAvgs
+
+dotenv.load_dotenv()
+
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 app = Flask(__name__)
 CORS(app)
 
-
-file_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/crop_data.xlsx"
+file_path = "crop_data.xlsx"
 df = pd.read_excel(file_path)
 
 
@@ -42,7 +50,7 @@ class CropClassifier(nn.Module):
 
 num_classes = len(label_encoder.classes_)
 model = CropClassifier(input_size=3, num_classes=num_classes)
-model.load_state_dict(torch.load("/Users/kaleddahleh/Desktop/Croptimizer/backend/saved_models/model.pth"))
+model.load_state_dict(torch.load("./saved_models/model.pth"))
 model.eval()
 
 def get_top3_crops(temperature, rainfall, wind_speed):
@@ -65,20 +73,39 @@ def get_top3_crops(temperature, rainfall, wind_speed):
 def home():
     return jsonify({"message": "Crop Prediction API is Running!"})
 
+@app.route('/process', methods=['POST'])
+def process_data():
+    data = request.get_json()
+    lat = data.get("lat")
+    lng = data.get("lng")
+    soil_type = data.get("soilType")
+    plant_type = data.get("plantType")
+
+    result = {
+        "message": "Data received successfully",
+        "lat": lat,
+        "lng": lng,
+        "soilType": soil_type,
+        "plantType": plant_type
+    }
+
+    return jsonify(result), 200
+
 @app.route("/predict_crops", methods=["POST"])
 def predict_crops():
     try:
         data = request.json
-        required_fields = ["temperature", "rainfall", "wind_speed"]
+        required_fields = ["latitude", "longitude"]
 
         if not all(field in data for field in required_fields):
             return jsonify({
                 "error": "Missing one or more required fields: temperature, rainfall, wind_speed"
             }), 400
-
-        temperature = float(data["temperature"])
-        rainfall = float(data["rainfall"])
-        wind_speed = float(data["wind_speed"])
+        
+        all_data = getAvgs(data['latitude'], data['longitude'])
+        temperature = all_data['avg_temp']
+        rainfall = all_data['avg_precip']
+        wind_speed = all_data['avg_wind_speed']
 
         top3_crops = get_top3_crops(temperature, rainfall, wind_speed)
         return jsonify({"top3_crops": list(top3_crops)})
@@ -90,21 +117,42 @@ def predict_crops():
 @app.route("/predict_yield", methods=["POST"])
 def predict_yield_route():
     try:
-        data = request.json
-        required_fields = ["crop_type", "state", "latitude", "longitude"]
+        data = request.json  # Original request data
+        required_fields = ["crop_type", "latitude", "longitude"]
+
+        # Determine current state via reverse geo-coding
+        url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={data['latitude']},{data['longitude']}&key={GOOGLE_MAPS_API_KEY}"
+        state = None
+        response = requests.get(url)
+        if response.status_code == 200:
+            geo_data = response.json()  # Use a different variable name here
+            for component in geo_data['results'][0]['address_components']:
+                if 'administrative_area_level_1' in component['types']:
+                    state = component['long_name']
+                    print(state)
+                    break
+
+        if state is None:
+            return jsonify({
+                "error": "Could not determine state from latitude and longitude"
+            }), 400
 
         if not all(field in data for field in required_fields):
             return jsonify({
-                "error": "Missing one or more required fields: crop_type, state, latitude, longitude"
+                "error": "Missing one or more required fields: crop_type, latitude, longitude"
             }), 400
-
+        
         # Call predict_yield function from prediction.py
+
+        data["state"] = state
+
         predicted_yield = predict_yield(data)
 
-        return jsonify({"predicted_yield": predicted_yield})
+        return jsonify({"type": data["crop_type"], "predicted_yield": predicted_yield})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

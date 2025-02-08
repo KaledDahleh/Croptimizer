@@ -8,6 +8,7 @@ def fetchWeather(lat, lon):
 
 def getAvgs(lat, lon):
     data = fetchWeather(lat, lon)
+    
     temps_max = data.get("daily").get("temperature_2m_max")
     temps_min = data.get("daily").get("temperature_2m_min")
     precip = data.get("daily").get("precipitation_sum")

@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import pandas as pd
+from fetchWeather import getAvgs  # Importing the function to get weather data
 
 file_path = "./crop_data.xlsx"
 df = pd.read_excel(file_path)
@@ -51,9 +52,18 @@ def get_top3_crops(temperature, rainfall, wind_speed):
     return top3_crops
 
 if __name__ == "__main__":
-    temperature = float(input("Enter Temperature: "))
-    rainfall = float(input("Enter Rainfall: "))
-    wind_speed = float(input("Enter Wind Speed: "))
-    
+    lat = float(input("Enter Latitude: "))
+    lon = float(input("Enter Longitude: "))
+
+    # Fetch weather data
+    weather_data = getAvgs(lat, lon)
+
+    temperature = weather_data["avg_temp"]
+    rainfall = weather_data["avg_precip"]
+    wind_speed = weather_data["avg_wind_speed"]
+
+    print(f"Derived Weather Data:\nTemperature: {temperature:.2f}°C\nRainfall: {rainfall:.2f}mm\nWind Speed: {wind_speed:.2f}m/s")
+
+    # Get top 3 crops based on derived weather data
     top3_crops = get_top3_crops(temperature, rainfall, wind_speed)
     print(f"Top 3 Optimal Crops for given conditions: {top3_crops}")

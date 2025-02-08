@@ -100,7 +100,8 @@ def predict_yield(user_input):
 
     user_input_values = np.array([list(user_input_lower[f] for f in selected_features)]).reshape(1, -1)
 
-    predicted_yield = model.predict(user_input_values)
+    predicted_yield = model.predict(user_input_values)    
+    print(predicted_yield)
     return f"{predicted_yield[0]:.2f}"
 
 user_input = {
