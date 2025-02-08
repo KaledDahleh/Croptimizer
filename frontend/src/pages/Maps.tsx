@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const apiKey = import.meta.env.VITE_MAPS_API_KEY;
 
 function Map({ location = "UIC_ARC+IL" }: { location?: string }) {
   return (
-    <div className="w-full h-96 bg-gray-300 rounded-lg mt-4">
+    <div className="w-full h-96 md:h-120 bg-gray-300 rounded-lg mt-4">
       <iframe
         src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${location || "UIC_ARC+IL"}`}
         className="w-full h-full"
@@ -39,9 +40,9 @@ export default function Maps() {
   }, []);
 
   return (
+    
     <div className="p-4 m-0 w-full flex flex-col items-center">
       <Map location={location} />
-
 
       <div className="w-full flex flex-col md:flex-row md:justify-between">
 
@@ -68,7 +69,7 @@ export default function Maps() {
             </button>
           </div>
         </div>
-        <button className="bg-blue-500 text-white p-2 rounded-lg mt-4 w-full md:w-1/8 h-10">Next</button>
+
       </div>
 
     </div>

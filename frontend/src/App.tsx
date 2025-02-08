@@ -3,6 +3,7 @@ import Landing from './pages/Landing'
 import Maps from './pages/Maps'
 import './App.css'
 import { NavBar } from './components/NavBar';
+import { Form } from './pages/Form';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
 
         <Route path="/" element={<Landing />} />
         <Route path="/maps" element={<Maps />} />
+        <Route path="/form" element={<Form />} />
         <Route path="/about"/>
 
       </Routes>
