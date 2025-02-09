@@ -20,7 +20,7 @@ export default function Location() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedLocation) {
-      router.push(`/soil-and-plant?lat=${selectedLocation.lat}&lng=${selectedLocation.lng}`)
+      router.push(`/results?lat=${selectedLocation.lat}&lng=${selectedLocation.lng}`)
     }
   }
 
@@ -45,12 +45,12 @@ export default function Location() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <h2 className="text-3xl font-bold mb-4 text-green-700">Select Your Location</h2>
-      <div className="w-full max-w-2xl h-96 mb-4">
+    <div className="flex flex-col items-center justify-center min-h-screen py-4 px-4">
+      <h2 className="text-3xl font-bold mb-6 text-green-700">Select Your Location</h2>
+      <div className="w-full max-w-4xl h-[600px] mb-6 shadow-lg rounded-lg overflow-hidden">
         <MapWithNoSSR onLocationSelect={handleLocationSelect} selectedLocation={selectedLocation} />
       </div>
-      <div className="w-full max-w-2xl flex justify-between mb-4">
+      <div className="w-full max-w-4xl flex space-x-4">
         <Button onClick={handleCurrentLocation} variant="outline">
           Use Current Location
         </Button>
@@ -61,4 +61,3 @@ export default function Location() {
     </div>
   )
 }
-

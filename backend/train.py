@@ -5,19 +5,17 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 
-# Load dataset
-file_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/crop_data.xlsx"
+file_path = "./crop_data.xlsx"
 df = pd.read_excel(file_path)
 
 print("Dataset Loaded. First 5 rows:")
 print(df.head())
 
-# Encode labels
 label_encoder = LabelEncoder()
 df['label'] = label_encoder.fit_transform(df['label'])
 print("Label Encoding Completed. Unique classes:", label_encoder.classes_)
 
-# Feature selection and scaling
+
 X = df[['temperature', 'rainfall', 'wind_speed']].values
 y = df['label'].values
 
@@ -25,18 +23,18 @@ scaler = StandardScaler()
 X = scaler.fit_transform(X)
 print("Feature Scaling Applied.")
 
-# Convert to tensors
+
 X_train_tensor = torch.tensor(X, dtype=torch.float32)
 y_train_tensor = torch.tensor(y, dtype=torch.long)
 
-# DataLoader setup
-batch_size = 32  # Increased batch size for efficiency
+
+batch_size = 32 
 train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 print("DataLoader Created.")
 
-# Define a deeper model for improved learning
+
 class CropClassifier(nn.Module):
     def __init__(self, input_size, num_classes):
         super(CropClassifier, self).__init__()
@@ -58,12 +56,12 @@ num_classes = len(label_encoder.classes_)
 model = CropClassifier(input_size=3, num_classes=num_classes)
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)  # Reduced learning rate for better stability
+optimizer = optim.Adam(model.parameters(), lr=0.001)  
 
 print("Model Initialized.")
 
-# Training loop
-num_epochs = 30  # Increased epochs for better convergence
+
+num_epochs = 30  
 for epoch in range(num_epochs):
     model.train()
     total_loss = 0
@@ -85,8 +83,8 @@ for epoch in range(num_epochs):
 
 print("Training Completed!")
 
-# Save model
-save_path = "/Users/kaleddahleh/Desktop/Croptimizer/backend/saved_models/model.pth"
+
+save_path = "./saved_models/model.pth"
 torch.save(model.state_dict(), save_path)
 
 print(f"Model Saved Successfully at: {save_path}")

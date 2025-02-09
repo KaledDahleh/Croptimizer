@@ -38,10 +38,21 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation }) => {
         map.addListener("click", handleMapClick)
       }
     })
+
+    return () => {
+      // Remove the click listener and clear the marker on unmount
+      if (googleMapRef.current) {
+        google.maps.event.clearListeners(googleMapRef.current, "click")
+      }
+      if (markerRef.current) {
+        markerRef.current.setMap(null)
+      }
+    }
   }, [handleMapClick])
 
   useEffect(() => {
     if (googleMapRef.current && selectedLocation) {
+      // Remove previous marker if it exists
       if (markerRef.current) {
         markerRef.current.setMap(null)
       }
@@ -54,8 +65,7 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation }) => {
     }
   }, [selectedLocation])
 
-  return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+  return <div ref={mapRef} className="w-full h-full" />
 }
 
 export default Map
-

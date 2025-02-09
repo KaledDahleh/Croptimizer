@@ -5,11 +5,11 @@ import torch.nn as nn
 import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import pandas as pd
-from prediction import predict_yield
+from prediction import predict_yield  
 import dotenv
 import os
 import requests
-from fetchWeather import getAvgs
+from fetchWeather import getAvgs  
 
 dotenv.load_dotenv()
 
@@ -18,6 +18,7 @@ GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 app = Flask(__name__)
 CORS(app)
 
+
 file_path = "crop_data.xlsx"
 df = pd.read_excel(file_path)
 
@@ -25,11 +26,9 @@ df = pd.read_excel(file_path)
 label_encoder = LabelEncoder()
 df['label'] = label_encoder.fit_transform(df['label'])
 
-
 scaler = StandardScaler()
 X = df[['temperature', 'rainfall', 'wind_speed']].values
 scaler.fit(X)
-
 
 class CropClassifier(nn.Module):
     def __init__(self, input_size, num_classes):
@@ -58,14 +57,13 @@ def get_top3_crops(temperature, rainfall, wind_speed):
     Process the input values, run them through the model,
     and return the top 3 predicted crops.
     """
-
     data = np.array([[temperature, rainfall, wind_speed]])
     data = scaler.transform(data)
     data_tensor = torch.tensor(data, dtype=torch.float32)
     
     with torch.no_grad():
         output = model(data_tensor)
-        top3_indices = torch.topk(output, 3, dim=1).indices[0].tolist()
+        top3_indices = torch.topk(output, 6, dim=1).indices[0].tolist()
         top3_crops = label_encoder.inverse_transform(top3_indices)
     return top3_crops
 
@@ -97,9 +95,10 @@ def predict_crops():
         data = request.json
         required_fields = ["latitude", "longitude"]
 
+
         if not all(field in data for field in required_fields):
             return jsonify({
-                "error": "Missing one or more required fields: temperature, rainfall, wind_speed"
+                "error": "Missing one or more required fields: latitude, longitude"
             }), 400
         
         all_data = getAvgs(data['latitude'], data['longitude'])
@@ -117,38 +116,42 @@ def predict_crops():
 @app.route("/predict_yield", methods=["POST"])
 def predict_yield_route():
     try:
-        data = request.json  # Original request data
+        data = request.json 
         required_fields = ["crop_type", "latitude", "longitude"]
-
-        # Determine current state via reverse geo-coding
-        url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={data['latitude']},{data['longitude']}&key={GOOGLE_MAPS_API_KEY}"
-        state = None
-        response = requests.get(url)
-        if response.status_code == 200:
-            geo_data = response.json()  # Use a different variable name here
-            for component in geo_data['results'][0]['address_components']:
-                if 'administrative_area_level_1' in component['types']:
-                    state = component['long_name']
-                    print(state)
-                    break
-
-        if state is None:
-            return jsonify({
-                "error": "Could not determine state from latitude and longitude"
-            }), 400
 
         if not all(field in data for field in required_fields):
             return jsonify({
                 "error": "Missing one or more required fields: crop_type, latitude, longitude"
             }), 400
         
-        # Call predict_yield function from prediction.py
+        lat = data['latitude']
+        lng = data['longitude']
+        url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={GOOGLE_MAPS_API_KEY}"
+        response = requests.get(url)
+        state = None
+        if response.status_code == 200:
+            geo_data = response.json()
+            if geo_data.get('results'):
+                for component in geo_data['results'][0]['address_components']:
+                    if 'administrative_area_level_1' in component['types']:
+                        state = component['long_name']
+                        break
+
+        if state is None:
+            return jsonify({
+                "error": "Could not determine state from latitude and longitude"
+            }), 400
 
         data["state"] = state
 
-        predicted_yield = predict_yield(data)
 
-        return jsonify({"type": data["crop_type"], "predicted_yield": predicted_yield})
+        predicted_yield = predict_yield(data)
+        
+
+        return jsonify({
+            "crop_type": data["crop_type"],
+            "predicted_yield": predicted_yield
+        })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
